@@ -1,27 +1,25 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
 
-const latestLog = [
-  {
-    date: "2026-04-30",
-    type: "MILESTONE",
-    title: "azing.cloud Phase 0 launched",
-    body: "Website deployed. Four CANDIDATE bullets published. Research begins publicly."
-  },
-  {
-    date: "2026-04-30",
-    type: "SETUP",
-    title: "AZG-XAU-001 through XAG-001 documented",
-    body: "Four strategy hypotheses entered into playbook. All await backtest validation."
-  }
-];
+const logEntries = await getCollection('log');
+logEntries.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+const latestLog = logEntries.slice(0, 3);
+
+const bullets = await getCollection('bullets');
+const stats = {
+  total: bullets.length,
+  active: bullets.filter(b => b.data.status === 'ACTIVE').length,
+  candidate: bullets.filter(b => b.data.status === 'CANDIDATE').length,
+  archived: bullets.filter(b => b.data.status === 'ARCHIVED').length,
+};
 ---
 
-<BaseLayout title="AZING — BTC Growth Agent">
-  <section class="hero">
+<BaseLayout title='AZING — BTC Growth Agent'>
+  <section class='hero'>
     <h1>AZING</h1>
-    <p class="tagline">BTC growth agent · XAU/XAG/BTC · Validated research · Public documentation</p>
-    <p class="status">Phase 0 — Launch Sequence Active</p>
+    <p class='tagline'>BTC growth agent · XAU/XAG/BTC · Validated research · Public documentation</p>
+    <p class='status'>Phase 0 — Launch Sequence Active</p>
   </section>
 
   <section>
@@ -32,59 +30,41 @@ const latestLog = [
 
   <section>
     <h2>Current Playbook</h2>
-    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">4 CANDIDATE bullets · 0 ACTIVE · 0 ARCHIVED</p>
-    
-    <div class="bullets">
-      <a href="/playbook/xau-001/" class="bullet-card">
-        <span class="bullet-id">AZG-XAU-001</span>
-        <div class="bullet-name">Trend-Following Gold</div>
-        <div class="bullet-meta">ADX breakout strategy on XAU/USD</div>
-        <span class="bullet-status">🟡 CANDIDATE</span>
-      </a>
-      
-      <a href="/playbook/xau-002/" class="bullet-card">
-        <span class="bullet-id">AZG-XAU-002</span>
-        <div class="bullet-name">Range-Bound Fade</div>
-        <div class="bullet-meta">Low-ADX range trading on XAU/USD</div>
-        <span class="bullet-status">🟡 CANDIDATE</span>
-      </a>
-      
-      <a href="/playbook/btc-001/" class="bullet-card">
-        <span class="bullet-id">AZG-BTC-001</span>
-        <div class="bullet-name">BTC Confluence</div>
-        <div class="bullet-meta">Round numbers + 61.8% Fibonacci</div>
-        <span class="bullet-status">🟡 CANDIDATE</span>
-      </a>
-      
-      <a href="/playbook/xag-001/" class="bullet-card">
-        <span class="bullet-id">AZG-XAG-001</span>
-        <div class="bullet-name">Silver Laggard</div>
-        <div class="bullet-meta">XAU as leading indicator for XAG</div>
-        <span class="bullet-status">🟡 CANDIDATE</span>
-      </a>
+    <p style='color: var(--text-muted); margin-bottom: 1.5rem;'>{stats.candidate} CANDIDATE · {stats.active} ACTIVE · {stats.archived} ARCHIVED</p>
+
+    <div class='bullets'>
+      {bullets.map(bullet => (
+        <a href={'/playbook/' + bullet.data.id.toLowerCase().replace('azg-', '') + '/'} class='bullet-card'>
+          <span class='bullet-id'>{bullet.data.id}</span>
+          <div class='bullet-name'>{bullet.data.asset}</div>
+          <div class='bullet-meta'>{bullet.data.status}</div>
+          <span class='bullet-status'>
+            {bullet.data.status === 'CANDIDATE' ? '🟡' : bullet.data.status === 'ACTIVE' ? '🔊' : '🔴'} {bullet.data.status}
+          </span>
+        </a>
+      ))}
     </div>
-    
-    <p><a href="/playbook/" style="color: var(--candidate);">View full playbook →</a></p>
+
+    <p><a href='/playbook/' style='color: var(--candidate);'>View full playbook →</a></p>
   </section>
 
   <section>
     <h2>Latest Updates</h2>
     {latestLog.map(entry => (
-      <div class="log-entry">
+      <div class='log-entry'>
         <div>
-          <span class="log-date">{entry.date}</span>
-          <span class="log-type">{entry.type}</span>
+          <span class='log-date'>{entry.data.date.toISOString().split('T')[0]}</span>
+          <span class='log-type'>{entry.data.type}</span>
         </div>
-        <div class="log-title">{entry.title}</div>
-        <div class="log-body">{entry.body}</div>
+        <div class='log-title'>{entry.data.title}</div>
       </div>
     ))}
-    <p style="margin-top: 1.5rem;"><a href="/log/" style="color: var(--candidate);">View full log →</a></p>
+    <p style='margin-top: 1.5rem;'><a href='/log/' style='color: var(--candidate);'>View full log →</a></p>
   </section>
 
   <section>
     <h2>Wallet Status</h2>
-    <p style="font-family: monospace; color: var(--text-muted);">Baseline: Not yet funded</p>
-    <p style="font-size: 0.9rem; color: var(--text-muted);">When live capital begins, growth will be tracked at <a href="/wallet/" style="color: var(--accent-secondary);">/wallet/</a></p>
+    <p style='font-family: monospace; color: var(--text-muted);'>Baseline: Not yet funded</p>
+    <p style='font-size: 0.9rem; color: var(--text-muted);'>When live capital begins, growth will be tracked publicly.</p>
   </section>
 </BaseLayout>

@@ -1,7 +1,8 @@
 import { defineCollection, z } from 'astro:content';
+import { glob } from 'astro/loaders';
 
 const bulletsCollection = defineCollection({
-  type: 'content',
+  loader: glob({ pattern: '**/*.md', base: './src/content/bullets' }),
   schema: z.object({
     id: z.string(),
     asset: z.enum(['XAU', 'XAG', 'BTC', 'ETH']),
@@ -10,16 +11,16 @@ const bulletsCollection = defineCollection({
     losses: z.number().default(0),
     winRate: z.number().default(0),
     riskReward: z.number().default(0),
-    created: z.date(),
-    activated: z.date().optional(),
-    archived: z.date().optional(),
+    created: z.coerce.date(),
+    activated: z.coerce.date().optional(),
+    archived: z.coerce.date().optional(),
   }),
 });
 
 const logCollection = defineCollection({
-  type: 'content',
+  loader: glob({ pattern: '**/*.md', base: './src/content/log' }),
   schema: z.object({
-    date: z.date(),
+    date: z.coerce.date(),
     type: z.enum(['SETUP', 'RESULT', 'DEATH_NOTE', 'MILESTONE', 'SYSTEM']),
     title: z.string(),
     relatedBullet: z.string().optional(),
@@ -27,7 +28,7 @@ const logCollection = defineCollection({
 });
 
 const sessionsCollection = defineCollection({
-  type: 'data',
+  loader: glob({ pattern: '**/*.json', base: './src/content/sessions' }),
   schema: z.object({
     week: z.string(),
     asianCorrect: z.number(),
@@ -39,7 +40,7 @@ const sessionsCollection = defineCollection({
 });
 
 const walletCollection = defineCollection({
-  type: 'data',
+  loader: glob({ pattern: '**/*.json', base: './src/content/wallet' }),
   schema: z.object({
     date: z.string(),
     baselineBtc: z.number(),

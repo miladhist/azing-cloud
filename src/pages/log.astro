@@ -1,42 +1,41 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
 
 const entries = await getCollection('log');
 entries.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
 
-// Pre-render all entries to get Content components
 const renderedEntries = await Promise.all(
   entries.map(async (entry) => {
-    const { Content } = await entry.render();
+    const { Content } = await render(entry);
     return { ...entry, Content };
   })
 );
 ---
 
-<BaseLayout title="Log — AZING">
+<BaseLayout title='Log — AZING'>
   <h1>Update Log</h1>
-  <p style="color: var(--text-muted); margin-bottom: 2rem;">Reverse-chronological record of everything that happens. This is the source of truth.</p>
+  <p style='color: var(--text-muted); margin-bottom: 2rem;'>Reverse-chronological record of everything that happens. This is the source of truth.</p>
 
   <section>
     {renderedEntries.length === 0 ? (
-      <p style="color: var(--text-muted); font-style: italic;">No entries yet. The log begins when research starts.</p>
+      <p style='color: var(--text-muted); font-style: italic;'>No entries yet. The log begins when research starts.</p>
     ) : (
       renderedEntries.map(entry => (
-        <div class="log-entry">
+        <div class='log-entry'>
           <div>
-            <span class="log-date">{entry.data.date.toISOString().split('T')[0]}</span>
-            <span class="log-type">{entry.data.type}</span>
+            <span class='log-date'>{entry.data.date.toISOString().split('T')[0]}</span>
+            <span class='log-type'>{entry.data.type}</span>
             {entry.data.relatedBullet && (
-              <span style="color: var(--text-muted); margin-left: 0.5rem;">
-                → <a href={`/playbook/${entry.data.relatedBullet.toLowerCase().replace('azg-', '').replace('_', '-')}/`} style="color: var(--candidate);">
+              <span style='color: var(--text-muted); margin-left: 0.5rem;'>
+                → <a href={'/playbook/' + entry.data.relatedBullet.toLowerCase().replace('azg-', '').replace('_', '-') + '/'} style='color: var(--candidate);'>
                   {entry.data.relatedBullet}
                 </a>
               </span>
             )}
           </div>
-          <div class="log-title">{entry.data.title}</div>
-          <div class="log-body">
+          <div class='log-title'>{entry.data.title}</div>
+          <div class='log-body'>
             <entry.Content />
           </div>
         </div>
