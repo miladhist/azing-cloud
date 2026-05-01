@@ -1,0 +1,103 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const bullets = await getCollection('bullets');
+  return bullets.map(bullet => ({
+    params: { slug: bullet.data.id.toLowerCase().replace('azg-', '').replace('_', '-') },
+    props: { bullet },
+  }));
+}
+
+const { bullet } = Astro.props;
+const { Content } = await bullet.render();
+
+const statusColors = {
+  ACTIVE: 'var(--active)',
+  CANDIDATE: 'var(--candidate)',
+  ARCHIVED: 'var(--archived)'
+};
+
+const statusIcons = {
+  ACTIVE: '🔊',
+  CANDIDATE: '🟡',
+  ARCHIVED: '🔴'
+};
+
+const totalTrades = bullet.data.wins + bullet.data.losses;
+const winRateDisplay = totalTrades > 0 ? `${bullet.data.winRate.toFixed(1)}%` : 'N/A';
+---
+
+<BaseLayout title={`${bullet.data.id} — AZING Playbook`}>
+  <nav style="margin-bottom: 1rem;">
+    <a href="/playbook/" style="color: var(--text-muted); font-size: 0.9rem;">← Back to Playbook</a>
+  </nav>
+
+  <div class="bullet-header" style="margin-bottom: 2rem;">
+    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+      <h1 style="margin: 0;">{bullet.data.id}</h1>
+      <span 
+        style={`padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.85rem; font-weight: 500; background: ${statusColors[bullet.data.status]}20; color: ${statusColors[bullet.data.status]}`}
+      >
+        {statusIcons[bullet.data.status]} {bullet.data.status}
+      </span>
+    </div>
+    <div style="color: var(--text-muted); margin-top: 0.5rem;">
+      {bullet.data.asset} · Created {bullet.data.created.toISOString().split('T')[0]}
+      {bullet.data.activated && ` · Activated ${bullet.data.activated.toISOString().split('T')[0]}`}
+    </div>
+  </div>
+
+  <div class="metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-bottom: 2rem; padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">
+    <div>
+      <div style="font-size: 0.8rem; color: var(--text-muted);">Wins</div>
+      <div style="font-size: 1.5rem; font-weight: 600; color: var(--active);">{bullet.data.wins}</div>
+    </div>
+    <div>
+      <div style="font-size: 0.8rem; color: var(--text-muted);">Losses</div>
+      <div style="font-size: 1.5rem; font-weight: 600; color: var(--archived);">{bullet.data.losses}</div>
+    </div>
+    <div>
+      <div style="font-size: 0.8rem; color: var(--text-muted);">Total Trades</div>
+      <div style="font-size: 1.5rem; font-weight: 600;">{totalTrades}</div>
+    </div>
+    <div>
+      <div style="font-size: 0.8rem; color: var(--text-muted);">Win Rate</div>
+      <div style="font-size: 1.5rem; font-weight: 600; color: var(--candidate);">{winRateDisplay}</div>
+    </div>
+    <div>
+      <div style="font-size: 0.8rem; color: var(--text-muted);">R:R Ratio</div>
+      <div style="font-size: 1.5rem; font-weight: 600;">{bullet.data.riskReward.toFixed(1)}:1</div>
+    </div>
+  </div>
+
+  <article class="bullet-content">
+    <Content />
+  </article>
+
+  <section style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+    <h2>Progression Log</h2>
+    {bullet.data.activated ? (
+      <div style="margin-bottom: 1rem;">
+        <span style="color: var(--active);">🔊 ACTIVATED</span>
+        <span style="color: var(--text-muted); margin-left: 0.5rem;">{bullet.data.activated.toISOString().split('T')[0]}</span>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
+          Backtest passed. Now trading live with small capital.
+        </p>
+      </div>
+    ) : bullet.data.archived ? (
+      <div style="margin-bottom: 1rem;">
+        <span style="color: var(--archived);">🔴 ARCHIVED</span>
+        <span style="color: var(--text-muted); margin-left: 0.5rem;">{bullet.data.archived.toISOString().split('T')[0]}</span>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
+          Failed validation. Death Note written. See log for details.
+        </p>
+      </div>
+    ) : (
+      <p style="color: var(--text-muted); font-style: italic;">
+        Awaiting progression. Current status: {bullet.data.status}
+      </p>
+    )}
+  </section>
+</BaseLayout>

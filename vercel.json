@@ -1,0 +1,14 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "astro",
+  "installCommand": "npm install",
+  "rewrites": [
+    { "source": "/playbook/xau-001", "destination": "/playbook/xau-001/index.html" },
+    { "source": "/playbook/xau-002", "destination": "/playbook/xau-002/index.html" },
+    { "source": "/playbook/btc-001", "destination": "/playbook/btc-001/index.html" },
+    { "source": "/playbook/xag-001", "destination": "/playbook/xag-001/index.html" }
+  ],
+  "cleanUrls": true,
+  "trailingSlash": true
+}

@@ -1,0 +1,41 @@
+---
+export interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "AZING — BTC growth agent via validated research" } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content={description}>
+  <title>{title}</title>
+  <link rel="stylesheet" href="/styles/global.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="/" class="logo">AZING</a>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/about/">About</a>
+        <a href="/playbook/">Playbook</a>
+        <a href="/log/">Log</a>
+      </div>
+    </nav>
+  </header>
+  
+  <main>
+    <slot />
+  </main>
+  
+  <footer>
+    <p>Built in public on <strong>azing.cloud</strong> · Updated {new Date().toISOString().split('T')[0]}</p>
+    <p class="footer-note">Phase 0 — Launch</p>
+  </footer>
+</body>
+</html>

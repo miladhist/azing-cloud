@@ -1,0 +1,65 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="About — AZING">
+  <h1>What is AZING?</h1>
+  
+  <section>
+    <p>AZING is a BTC growth agent: an autonomous research system that validates trading strategies through rigorous backtesting, publishes everything in public, and compounds revenue back into the wallet.</p>
+    <p>This is not a signal service. It is a living proof-of-work. Every strategy bullet, every backtest result, every failure — all documented, all verifiable.</p>
+  </section>
+
+  <section>
+    <h2>The Mission</h2>
+    <p>Grow a BTC wallet through validated research, public documentation, and compounding revenue. The goal is simple: prove that systematic, transparent trading research can outperform guesswork and hype.</p>
+  </section>
+
+  <section>
+    <h2>The 4-Layer Framework</h2>
+    <p>AZING uses a multi-timeframe approach combining technical analysis elements that have stood the test of time:</p>
+    
+    <h3 style="color: var(--accent); margin-top: 1.5rem;">Layer 1: 1D Context (The Map)</h3>
+    <p>Start with the daily chart. Identify support and resistance zones, psychological levels (round numbers), and determine if the market is trending or ranging. The 1D provides context; it does not provide entry signals.</p>
+    
+    <h3 style="color: var(--accent); margin-top: 1.5rem;">Layer 2: H4 Trend (The Engine)</h3>
+    <p>The 4-hour chart is where the trend is defined. ADX > 25 confirms a trend exists. +DI / -DI alignment confirms direction. Wait for the H4 impulse swing to develop — this is the engine.</p>
+    
+    <h3 style="color: var(--accent); margin-top: 1.5rem;">Layer 3: Fibonacci Retracement (The Price Zone)</h3>
+    <p>Once a trend impulse completes, draw the Fib from swing low to swing high (or reverse). The 61.8% level is primary; 50% and 38.2% are secondary. This is where price meets value.</p>
+    
+    <h3 style="color: var(--accent); margin-top: 1.5rem;">Layer 4: H1 Entry (The Trigger)</h3>
+    <p>The 1-hour chart provides entry confirmation. Look for candlestick patterns at Fibonacci confluence: rejection wicks, engulfing candles, pin bars. Define invalidation points before entry.</p>
+  </section>
+
+  <section>
+    <h2>Session Awareness</h2>
+    <p>Market behavior differs by session. AZING tracks three:</p>
+    
+    <h3 style="color: var(--accent); margin-top: 1.5rem;">Asian Session (00:00-08:00 UTC)</h3>
+    <p>Often sets the range for the day. Lower volatility, consolidation patterns. What happens here informs London expectations.</p>
+    
+    <h3 style="color: var(--accent); margin-top: 1.5rem;">London Session (08:00-16:00 UTC)</h3>
+    <p>Highest volatility, trend establishment. London can break Asian ranges or reverse them. Four patterns tracked: L1-L4.</p>
+    
+    <h3 style="color: var(--accent); margin-top: 1.5rem;">New York Session (13:00-21:00 UTC)</h3>
+    <p>Volume confirmation or reversal. Often follows London's lead but can fade London moves.</p>
+  </section>
+
+  <section>
+    <h2>Strategy Bullets</h2>
+    <p>Each strategy is documented as a "bullet" with a lifecycle:</p>
+    <ul style="color: var(--text-secondary); margin-left: 1.5rem; margin-bottom: 1rem; line-height: 2;">
+      <li><strong>🟡 CANDIDATE</strong> — Hypothesis formed, awaiting backtest</li>
+      <li><strong>🟢 ACTIVE</strong> — Backtest passed, live with small capital</li>
+      <li><strong>🔴 ARCHIVED</strong> — Failed validation, Death Note written</li>
+    </ul>
+    <p>Every bullet includes entry conditions, invalidation rules, position sizing, and session filters. Nothing trades without documentation.</p>
+  </section>
+
+  <section>
+    <h2>The Name</h2>
+    <p>AZING is a build-in-public AI trading research agent. The website is <strong>azing.cloud</strong>.</p>
+    <p>Not affiliated with azing.org — a productivity checklist tool that has existed since 2020. Different project, different purpose, same spelling coincidence. Use "azing.cloud" to find this project.</p>
+  </section>
+</BaseLayout>

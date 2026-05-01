@@ -1,0 +1,93 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const bullets = await getCollection('bullets');
+const sortedBullets = bullets.sort((a, b) => {
+  const statusOrder = { ACTIVE: 0, CANDIDATE: 1, ARCHIVED: 2 };
+  const statusDiff = statusOrder[a.data.status] - statusOrder[b.data.status];
+  if (statusDiff !== 0) return statusDiff;
+  return a.data.id.localeCompare(b.data.id);
+});
+
+const stats = {
+  total: bullets.length,
+  active: bullets.filter(b => b.data.status === 'ACTIVE').length,
+  candidate: bullets.filter(b => b.data.status === 'CANDIDATE').length,
+  archived: bullets.filter(b => b.data.status === 'ARCHIVED').length,
+};
+---
+
+<BaseLayout title="Playbook — AZING">
+  <h1>The Playbook</h1>
+  
+  <p style="color: var(--text-muted); margin-bottom: 1rem;">
+    Each bullet is a strategy hypothesis with a lifecycle. Nothing trades without documentation.
+  </p>
+
+  <div class="stats-bar" style="margin-bottom: 2rem; display: flex; gap: 1.5rem; font-family: monospace; font-size: 0.9rem;">
+    <span>🔊 {stats.active} ACTIVE</span>
+    <span>🟡 {stats.candidate} CANDIDATE</span>
+    <span>🔴 {stats.archived} ARCHIVED</span>
+    <span style="color: var(--text-muted);">= {stats.total} total</span>
+  </div>
+
+  <section>
+    {sortedBullets.length === 0 ? (
+      <p style="color: var(--text-muted);">No bullets yet. The playbook begins with the first hypothesis.</p>
+    ) : (
+      <div class="bullets">
+        {sortedBullets.map(bullet => {
+          const statusColors = {
+            ACTIVE: 'var(--active)',
+            CANDIDATE: 'var(--candidate)',
+            ARCHIVED: 'var(--archived)'
+          };
+          const statusIcons = {
+            ACTIVE: '🔊',
+            CANDIDATE: '🟡',
+            ARCHIVED: '🔴'
+          };
+          return (
+            <a href={`/playbook/${bullet.data.id.toLowerCase().replace('azg-', '').replace('_', '-')}/`} class="bullet-card">
+              <span class="bullet-id">{bullet.data.id}</span>
+              <div class="bullet-name">{bullet.data.asset}</div>
+              <div class="bullet-meta" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+                {bullet.data.wins}/{bullet.data.wins + bullet.data.losses} trades · 
+                Win rate: {bullet.data.winRate.toFixed(1)}% · 
+                R:R {bullet.data.riskReward.toFixed(1)}
+              </div>
+              <span class="bullet-status" style={`color: ${statusColors[bullet.data.status]}`}>
+                {statusIcons[bullet.data.status]} {bullet.data.status}
+              </span>
+            </a>
+          );
+        })}
+      </div>
+    )}
+  </section>
+
+  <section style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+    <h2>Bullet Lifecycle</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+      <div>
+        <h3 style="color: var(--candidate);">🟡 CANDIDATE</h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+          Hypothesis formed, awaiting backtest. Has entry, invalidation, and session filter defined. Not yet trading.
+        </p>
+      </div>
+      <div>
+        <h3 style="color: var(--active);">🔊 ACTIVE</h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+          Backtest passed (WR ≥ 55%, RR ≥ 2.0). Live with small capital. Tracked in real-time.
+        </p>
+      </div>
+      <div>
+        <h3 style="color: var(--archived);">🔴 ARCHIVED</h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+          Failed validation. Death Note written. Learnings extracted. No longer trading.
+        </p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
