@@ -4,7 +4,6 @@
   "framework": "astro",
   "installCommand": "npm install",
   "rewrites": [
-    { "source": "/worldcup-api/:path*", "destination": "/api/worldcup-api?path=/:path*" },
     { "source": "/playbook/xau-001", "destination": "/playbook/xau-001/index.html" },
     { "source": "/playbook/xau-002", "destination": "/playbook/xau-002/index.html" },
     { "source": "/playbook/btc-001", "destination": "/playbook/btc-001/index.html" },
