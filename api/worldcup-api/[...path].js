@@ -1,58 +1,28 @@
-// Vercel Edge Function — proxies World Cup Bot API calls to VPS backend
 export const config = { runtime: "edge" };
 
-const BACKEND = "http://76.13.148.202:3456";
-
-export default async function handler(request) {
-  // Handle CORS preflight
-  if (request.method === "OPTIONS") {
+export default async function handler(req) {
+  if (req.method === "OPTIONS") {
     return new Response(null, {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
-      },
+      headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET,POST", "Access-Control-Allow-Headers": "Content-Type" }
     });
   }
-
-  const url = new URL(request.url);
-  // Extract the path after /worldcup-api
-  const rawPath = url.pathname;
-  const idx = rawPath.indexOf("/worldcup-api");
-  const apiPath = idx >= 0 ? rawPath.substring(idx + "/worldcup-api".length) : rawPath;
-  const targetUrl = `${BACKEND}/api${apiPath}${url.search}`;
-
+  const url = new URL(req.url);
+  const path = url.pathname.replace("/api/worldcup-api", "") || "/stats";
   try {
-    const backendResponse = await fetch(targetUrl, {
-      method: request.method,
-      headers: {
-        "Content-Type": request.headers.get("Content-Type") || "application/json",
-        "Accept": "application/json",
-      },
-      body: request.method !== "GET" && request.method !== "HEAD"
-        ? await request.text()
-        : undefined,
+    const r = await fetch("http://76.13.148.202:3456/api" + path + url.search, {
+      method: req.method,
+      headers: { "Content-Type": req.headers.get("Content-Type") || "application/json", "Accept": "application/json" },
+      body: req.method !== "GET" ? await req.text() : undefined,
     });
-
-    const data = await backendResponse.json();
-    return new Response(JSON.stringify(data), {
-      status: backendResponse.status,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-        "Cache-Control": "public, max-age=30",
-      },
+    const d = await r.json();
+    return new Response(JSON.stringify(d), {
+      status: r.status,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
     });
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: "Backend unavailable", message: error.message }),
-      {
-        status: 502,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-      }
-    );
+  } catch(e) {
+    return new Response(JSON.stringify({error:"backend offline"}), {
+      status: 502,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+    });
   }
 }
