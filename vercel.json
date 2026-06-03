@@ -4,18 +4,12 @@
   "framework": "astro",
   "installCommand": "npm install",
   "rewrites": [
-    { "source": "/worldcup-api/:path*", "destination": "/api/worldcup-api/:path*" },
+    { "source": "/worldcup-api/:path*", "destination": "/api/worldcup-api?path=/:path*" },
     { "source": "/playbook/xau-001", "destination": "/playbook/xau-001/index.html" },
     { "source": "/playbook/xau-002", "destination": "/playbook/xau-002/index.html" },
     { "source": "/playbook/btc-001", "destination": "/playbook/btc-001/index.html" },
     { "source": "/playbook/xag-001", "destination": "/playbook/xag-001/index.html" }
   ],
   "cleanUrls": true,
-  "trailingSlash": true,
-  "headers": [
-    { "source": "/api/worldcup-api/(.*)", "headers": [
-      { "key": "Access-Control-Allow-Origin", "value": "*" },
-      { "key": "Cache-Control", "value": "public, max-age=30" }
-    ]}
-  ]
+  "trailingSlash": true
 }
