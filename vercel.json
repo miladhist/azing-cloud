@@ -3,7 +3,14 @@
   "outputDirectory": "dist",
   "framework": "astro",
   "installCommand": "npm install",
+  "functions": {
+    "api/[...path].js": {
+      "runtime": "edge",
+      "memory": 128
+    }
+  },
   "rewrites": [
+    { "source": "/api/:path*", "destination": "http://76.13.148.202:3456/api/:path*" },
     { "source": "/playbook/xau-001", "destination": "/playbook/xau-001/index.html" },
     { "source": "/playbook/xau-002", "destination": "/playbook/xau-002/index.html" },
     { "source": "/playbook/btc-001", "destination": "/playbook/btc-001/index.html" },
