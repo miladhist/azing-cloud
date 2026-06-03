@@ -3,6 +3,11 @@
   "outputDirectory": "dist",
   "framework": "astro",
   "installCommand": "npm install",
+  "functions": {
+    "api/worldcup-api/**": {
+      "runtime": "edge"
+    }
+  },
   "rewrites": [
     { "source": "/playbook/xau-001", "destination": "/playbook/xau-001/index.html" },
     { "source": "/playbook/xau-002", "destination": "/playbook/xau-002/index.html" },
@@ -13,15 +18,19 @@
   "trailingSlash": true,
   "headers": [
     {
+      "source": "/worldcup/(.*)",
+      "headers": [
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; script-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'" }
+      ]
+    },
+    {
       "source": "/(.*)",
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "X-XSS-Protection", "value": "1; mode=block" },
         { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; connect-src 'self'; frame-ancestors 'none'" },
-        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
       ]
     }
   ]

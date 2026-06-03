@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World Cup Quant Bot — Dashboard</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --card: #12121a;
+    --border: #1e1e30;
+    --text: #e0e0e0;
+    --muted: #666;
+    --green: #00d4aa;
+    --red: #ff4757;
+    --blue: #3b82f6;
+    --yellow: #f59e0b;
+    --purple: #8b5cf6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.5;
+    min-height: 100vh;
+  }
+  .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+  header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 0; border-bottom: 1px solid var(--border); margin-bottom: 24px;
+  }
+  header h1 { font-size: 22px; display: flex; align-items: center; gap: 8px; }
+  .status { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .status-dot.online { background: var(--green); }
+  .status-dot.offline { background: var(--red); }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px; display: flex; flex-direction: column; gap: 4px;
+  }
+  .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-value { font-size: 28px; font-weight: 700; }
+  .stat-sub { font-size: 12px; color: var(--muted); }
+  .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  @media (max-width: 900px) { .panels { grid-template-columns: 1fr; } }
+  .panel {
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px; overflow: hidden;
+  }
+  .panel h2 { font-size: 15px; margin-bottom: 12px; color: var(--text); display: flex; align-items: center; gap: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 8px 10px; color: var(--muted); font-weight: 500; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  .edge-pos { color: var(--green); }
+  .edge-neg { color: var(--red); }
+  .direction-long { color: var(--green); font-weight: 600; }
+  .direction-short { color: var(--red); font-weight: 600; }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 600;
+  }
+  .badge-long { background: rgba(0,212,170,0.15); color: var(--green); }
+  .badge-short { background: rgba(255,71,87,0.15); color: var(--red); }
+  .bar-container { height: 6px; background: var(--border); border-radius: 3px; margin-top: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+  .bar-long { background: var(--green); }
+  .bar-short { background: var(--red); }
+  button {
+    background: var(--blue); color: white; border: none; padding: 10px 20px;
+    border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;
+    display: flex; align-items: center; gap: 6px;
+  }
+  button:hover { opacity: 0.9; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.secondary { background: var(--border); }
+  .actions { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+  .loading { color: var(--muted); font-style: italic; }
+  .empty { color: var(--muted); text-align: center; padding: 20px; }
+  .team-row { display: flex; align-items: center; gap: 8px; }
+  .team-bar { flex: 1; }
+  .rankings-panel { margin-bottom: 24px; }
+  .progress-cell { min-width: 120px; }
+  .violation-card {
+    padding: 10px; border: 1px solid var(--border); border-radius: 6px;
+    margin-bottom: 8px; font-size: 13px;
+  }
+  .violation-card .type { color: var(--yellow); font-weight: 600; font-size: 11px; }
+  .ticker { 
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 16px; margin-bottom: 16px; font-size: 13px;
+    overflow-x: auto; white-space: nowrap;
+  }
+  .ticker-item { display: inline-block; margin-right: 24px; }
+  .ticker-label { color: var(--muted); font-size: 11px; }
+  .ticker-value { font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>⚽ World Cup Quant Bot</h1>
+    <div class="status">
+      <span class="status-dot online" id="statusDot"></span>
+      <span id="statusText">Loading...</span>
+      <span style="color:var(--muted)">| Last scan: <span id="lastScan">—</span></span>
+    </div>
+  </header>
+
+  <!-- Actions -->
+  <div class="actions">
+    <button onclick="triggerScan()" id="scanBtn">🔍 Scan Markets</button>
+    <button onclick="triggerExecute()" id="execBtn" class="secondary" disabled>💼 Execute All (Paper)</button>
+    <button onclick="refreshAll()" class="secondary">🔄 Refresh</button>
+  </div>
+
+  <!-- Ticker -->
+  <div class="ticker" id="ticker">
+    <span class="loading">Loading market data...</span>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card"><span class="stat-label">Tournament Volume</span><span class="stat-value" id="statVolume">—</span></div>
+    <div class="stat-card"><span class="stat-label">Markets Tracked</span><span class="stat-value" id="statMarkets">—</span></div>
+    <div class="stat-card"><span class="stat-label">Active Opportunities</span><span class="stat-value" id="statOpps">—</span></div>
+    <div class="stat-card"><span class="stat-label">Biggest Edge</span><span class="stat-value" id="statEdge">—</span></div>
+    <div class="stat-card"><span class="stat-label">Suggested Exposure</span><span class="stat-value" id="statExposure">—</span></div>
+    <div class="stat-card"><span class="stat-label">Total Trades</span><span class="stat-value" id="statTrades">—</span></div>
+  </div>
+
+  <!-- Top Opportunities + Model Rankings -->
+  <div class="panels">
+    <div class="panel">
+      <h2>📊 Top Opportunities</h2>
+      <div id="opportunitiesTable"><span class="loading">Run a scan to see opportunities</span></div>
+    </div>
+    <div class="panel">
+      <h2>🏆 Tournament Win Probabilities</h2>
+      <div id="rankingsTable"><span class="loading">Loading model...</span></div>
+    </div>
+  </div>
+
+  <!-- Constraint Violations + Portfolio -->
+  <div class="panels">
+    <div class="panel">
+      <h2>⚠️ Cross-Market Arbitrage</h2>
+      <div id="violationsPanel"><span class="loading">No violations yet</span></div>
+    </div>
+    <div class="panel">
+      <h2>💼 Portfolio</h2>
+      <div id="portfolioPanel"><span class="loading">No trades yet</span></div>
+    </div>
+  </div>
+
+  <!-- Trade History -->
+  <div class="panel" style="margin-bottom:24px">
+    <h2>📝 Recent Trades</h2>
+    <div id="tradesTable"><span class="loading">No trades recorded</span></div>
+  </div>
+</div>
+
+<script>
+const API = window.location.origin + '/worldcup-api';
+
+function fmt(v, d=2) { return v?.toFixed(d) || '0'; }
+function fmtPct(v) { return (v*100).toFixed(1) + '%'; }
+function fmtUSD(v) { 
+  if (!v) return '$0';
+  return v >= 1000 ? '$' + (v/1000).toFixed(1) + 'k' : '$' + v.toFixed(2);
+}
+function fmtB(v) { 
+  if (!v) return '$0';
+  return v >= 1e9 ? '$' + (v/1e9).toFixed(1) + 'B' : v >= 1e6 ? '$' + (v/1e6).toFixed(1) + 'M' : '$' + v.toFixed(0);
+}
+
+async function refreshAll() {
+  try {
+    const [stats, teams, trades] = await Promise.all([
+      fetch(API + '/stats').then(r => r.json()),
+      fetch(API + '/teams').then(r => r.json()),
+      fetch(API + '/trades').then(r => r.json()),
+    ]);
+    renderStats(stats);
+    renderTeams(teams);
+    renderTrades(trades);
+    if (stats.topOpportunities?.length) renderOpportunities(stats);
+    if (stats.violations?.length) renderViolations(stats.violations);
+    renderPortfolio();
+    renderTicker(stats);
+    updateStatus(true, stats.latestScan?.timestamp);
+  } catch (e) {
+    updateStatus(false);
+    console.error(e);
+  }
+}
+
+function updateStatus(online, ts) {
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  dot.className = 'status-dot ' + (online ? 'online' : 'offline');
+  text.textContent = online ? 'Live' : 'Offline';
+  document.getElementById('lastScan').textContent = ts ? new Date(ts).toLocaleTimeString() : '—';
+}
+
+function renderStats(data) {
+  const s = data.stats || {};
+  const ops = data.topOpportunities || [];
+  const maxEdge = ops.length ? Math.max(...ops.map(o => Math.abs(o.edge_percent))) : 0;
+
+  document.getElementById('statVolume').textContent = fmtB(ops.reduce((s,o) => s + (o.volume||0), 0));
+  document.getElementById('statMarkets').textContent = ops.length || '—';
+  document.getElementById('statOpps').textContent = ops.filter(o => Math.abs(o.edge_percent) > 2).length;
+  document.getElementById('statEdge').textContent = fmt(maxEdge, 1) + '%';
+  document.getElementById('statExposure').textContent = fmtUSD(
+    ops.filter(o => o.kelly_fraction > 0).reduce((s, o) => s + (o.suggested_bet || 0), 0)
+  );
+  document.getElementById('statTrades').textContent = s.totalTrades || 0;
+
+  document.getElementById('execBtn').disabled = !ops.length;
+}
+
+function renderTicker(data) {
+  const ops = data.topOpportunities || [];
+  if (!ops.length) {
+    document.getElementById('ticker').innerHTML = '<span class="loading">No data — run a scan</span>';
+    return;
+  }
+
+  const longCount = ops.filter(o => o.direction === 'LONG').length;
+  const shortCount = ops.filter(o => o.direction === 'SHORT').length;
+
+  document.getElementById('ticker').innerHTML = [
+    `<span class="ticker-item"><span class="ticker-label">Markets</span> <span class="ticker-value">${ops.length}</span></span>`,
+    `<span class="ticker-item"><span class="ticker-label">Longs</span> <span class="ticker-value" style="color:var(--green)">${longCount}</span></span>`,
+    `<span class="ticker-item"><span class="ticker-label">Shorts</span> <span class="ticker-value" style="color:var(--red)">${shortCount}</span></span>`,
+    ops[0] ? `<span class="ticker-item"><span class="ticker-label">Top Edge</span> <span class="ticker-value">${ops[0].team} ${ops[0].edge_percent > 0 ? '+' : ''}${fmt(ops[0].edge_percent,1)}%</span></span>` : '',
+    `<span class="ticker-item" style="color:var(--muted)">${data.latestScan?.timestamp ? 'Updated: ' + new Date(data.latestScan.timestamp).toLocaleString() : ''}</span>`,
+  ].join('');
+}
+
+function renderOpportunities(data) {
+  const ops = (data.topOpportunities || []).sort((a,b) => Math.abs(b.edge_percent) - Math.abs(a.edge_percent));
+  if (!ops.length) {
+    document.getElementById('opportunitiesTable').innerHTML = '<div class="empty">No opportunities found</div>';
+    return;
+  }
+
+  const html = `<table>
+    <tr><th>Team</th><th>Model</th><th>Market</th><th>Edge</th><th>Direction</th><th>Bet</th><th>Progress</th></tr>
+    ${ops.slice(0, 15).map(o => `
+      <tr>
+        <td><strong>${o.team || '?'}</strong></td>
+        <td>${fmtPct(o.model_prob)}</td>
+        <td>${fmtPct(o.market_prob)}</td>
+        <td class="${o.edge_percent > 0 ? 'edge-pos' : 'edge-neg'}">${o.edge_percent > 0 ? '+' : ''}${fmt(o.edge_percent,1)}%</td>
+        <td><span class="badge ${o.direction === 'LONG' ? 'badge-long' : 'badge-short'}">${o.bet_direction || (o.edge_percent > 0 ? 'YES' : 'NO')}</span></td>
+        <td>${fmtUSD(o.suggested_bet)}</td>
+        <td class="progress-cell">
+          <div class="bar-container"><div class="bar-fill ${o.edge_percent > 0 ? 'bar-long' : 'bar-short'}" style="width:${Math.min(Math.abs(o.edge_percent) * 5, 100)}%"></div></div>
+        </td>
+      </tr>
+    `).join('')}
+  </table>`;
+  document.getElementById('opportunitiesTable').innerHTML = html;
+}
+
+function renderTeams(data) {
+  const teams = (data.teams || []).sort((a,b) => b.tournament_win_prob - a.tournament_win_prob);
+  if (!teams.length) {
+    document.getElementById('rankingsTable').innerHTML = '<div class="empty">Run a scan to load predictions</div>';
+    return;
+  }
+
+  const html = `<table>
+    <tr><th>#</th><th>Team</th><th>Win Prob</th><th>Elo</th><th></th></tr>
+    ${teams.slice(0, 20).map((t, i) => `
+      <tr>
+        <td>${i+1}</td>
+        <td><strong>${t.team}</strong></td>
+        <td>${fmtPct(t.tournament_win_prob)}</td>
+        <td>${t.elo_rating || '—'}</td>
+        <td class="progress-cell"><div class="bar-container"><div class="bar-fill bar-long" style="width:${t.tournament_win_prob * 500}%"></div></div></td>
+      </tr>
+    `).join('')}
+  </table>`;
+  document.getElementById('rankingsTable').innerHTML = html;
+}
+
+function renderViolations(violations) {
+  if (!violations?.length) {
+    document.getElementById('violationsPanel').innerHTML = '<div class="empty">✅ No constraint violations detected</div>';
+    return;
+  }
+
+  const html = violations.slice(0, 10).map(v => `
+    <div class="violation-card">
+      <div class="type">${v.violation_type}</div>
+      <div><strong>${v.team || ''}</strong> — ${v.description || ''}</div>
+      <div style="margin-top:4px; color:var(--yellow)">Arbitrage: ${fmt(v.arbitrage_percent||0, 2)}%</div>
+      <div style="color:var(--muted); font-size:12px">${v.action || ''}</div>
+    </div>
+  `).join('');
+  document.getElementById('violationsPanel').innerHTML = html;
+}
+
+async function renderPortfolio() {
+  try {
+    const data = await fetch(API + '/portfolio').then(r => r.json());
+    const pf = data.portfolio || [];
+    if (!pf.length) {
+      document.getElementById('portfolioPanel').innerHTML = '<div class="empty">No positions yet</div>';
+      return;
+    }
+    const html = `<table>
+      <tr><th>Team</th><th>Long</th><th>Short</th><th>Trades</th></tr>
+      ${pf.map(p => `
+        <tr>
+          <td><strong>${p.team}</strong></td>
+          <td class="edge-pos">${fmtUSD(p.yes_exposure)}</td>
+          <td class="edge-neg">${fmtUSD(p.no_exposure)}</td>
+          <td>${p.trade_count}</td>
+        </tr>
+      `).join('')}
+    </table>`;
+    document.getElementById('portfolioPanel').innerHTML = html;
+  } catch(e) { document.getElementById('portfolioPanel').innerHTML = '<div class="empty">Error loading portfolio</div>'; }
+}
+
+function renderTrades(data) {
+  const trades = data.trades || [];
+  if (!trades.length) {
+    document.getElementById('tradesTable').innerHTML = '<div class="empty">No trades recorded</div>';
+    return;
+  }
+  const html = `<table>
+    <tr><th>Time</th><th>Team</th><th>Direction</th><th>Amount</th><th>Price</th><th>Status</th></tr>
+    ${trades.slice(0, 20).map(t => `
+      <tr>
+        <td>${new Date(t.timestamp).toLocaleString()}</td>
+        <td><strong>${t.team}</strong></td>
+        <td><span class="${t.direction === 'YES' ? 'direction-long' : 'direction-short'}">${t.direction}</span></td>
+        <td>${fmtUSD(t.amount)}</td>
+        <td>${fmt(t.price, 4)}</td>
+        <td style="color:${t.status === 'LIVE' ? 'var(--green)' : 'var(--muted)'}">${t.status}</td>
+      </tr>
+    `).join('')}
+  </table>`;
+  document.getElementById('tradesTable').innerHTML = html;
+}
+
+async function triggerScan() {
+  const btn = document.getElementById('scanBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Scanning...';
+
+  try {
+    const res = await fetch(API + '/scan', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({}) });
+    const data = await res.json();
+    if (data.success) {
+      btn.textContent = `✅ Scanned ${data.opportunities} opps`;
+      setTimeout(() => { btn.textContent = '🔍 Scan Markets'; btn.disabled = false; }, 2000);
+    } else {
+      btn.textContent = '❌ Failed — Retry';
+      btn.disabled = false;
+    }
+    await refreshAll();
+  } catch(e) {
+    btn.textContent = '❌ Error — Retry';
+    btn.disabled = false;
+    console.error(e);
+  }
+}
+
+async function triggerExecute() {
+  const btn = document.getElementById('execBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Executing...';
+
+  try {
+    const opsRes = await fetch(API + '/opportunities').then(r => r.json());
+    const opportunities = opsRes.opportunities || [];
+    if (!opportunities.length) {
+      btn.textContent = 'No opportunities';
+      btn.disabled = false;
+      return;
+    }
+
+    const res = await fetch(API + '/execute', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ opportunities, dryRun: true }),
+    });
+    const data = await res.json();
+    btn.textContent = `✅ ${data.executed} trades`;
+    setTimeout(() => { btn.textContent = '💼 Execute All (Paper)'; btn.disabled = false; }, 2000);
+    await refreshAll();
+  } catch(e) {
+    btn.textContent = '❌ Error';
+    btn.disabled = false;
+    console.error(e);
+  }
+}
+
+// Initial load
+refreshAll();
+// Auto refresh every 5 minutes
+setInterval(refreshAll, 5 * 60 * 1000);
+</script>
+</body>
+</html>
