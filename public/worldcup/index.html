@@ -161,7 +161,7 @@
 </div>
 
 <script>
-const API = 'http://76.13.148.202:3456/api';
+const API = window.location.origin + '/api';
 
 function fmt(v, d=2) { return v?.toFixed(d) || '0'; }
 function fmtPct(v) { return (v*100).toFixed(1) + '%'; }
@@ -177,9 +177,9 @@ function fmtB(v) {
 async function refreshAll() {
   try {
     const [stats, teams, trades] = await Promise.all([
-      fetch('http://76.13.148.202:3456/api/stats').then(r => r.json()),
-      fetch('http://76.13.148.202:3456/api/teams').then(r => r.json()),
-      fetch('http://76.13.148.202:3456/api/trades').then(r => r.json()),
+      fetch(API + '/stats').then(r => r.json()),
+      fetch(API + '/teams').then(r => r.json()),
+      fetch(API + '/trades').then(r => r.json()),
     ]);
     renderStats(stats);
     renderTeams(teams);
@@ -306,7 +306,7 @@ function renderViolations(violations) {
 
 async function renderPortfolio() {
   try {
-    const data = await fetch('http://76.13.148.202:3456/api/portfolio').then(r => r.json());
+    const data = await fetch(API + '/portfolio').then(r => r.json());
     const pf = data.portfolio || [];
     if (!pf.length) {
       document.getElementById('portfolioPanel').innerHTML = '<div class="empty">No positions yet</div>';
@@ -355,7 +355,7 @@ async function triggerScan() {
   btn.textContent = '⏳ Scanning...';
 
   try {
-    const res = await fetch('http://76.13.148.202:3456/api/scan', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({}) });
+    const res = await fetch(API + '/scan', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({}) });
     const data = await res.json();
     if (data.success) {
       btn.textContent = `✅ Scanned ${data.opportunities} opps`;
@@ -378,7 +378,7 @@ async function triggerExecute() {
   btn.textContent = '⏳ Executing...';
 
   try {
-    const opsRes = await fetch('http://76.13.148.202:3456/api/opportunities').then(r => r.json());
+    const opsRes = await fetch(API + '/opportunities').then(r => r.json());
     const opportunities = opsRes.opportunities || [];
     if (!opportunities.length) {
       btn.textContent = 'No opportunities';
@@ -386,7 +386,7 @@ async function triggerExecute() {
       return;
     }
 
-    const res = await fetch('http://76.13.148.202:3456/api/execute', {
+    const res = await fetch(API + '/execute', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ opportunities, dryRun: true }),
